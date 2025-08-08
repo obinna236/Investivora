@@ -13,7 +13,8 @@ import {
   Moon,
   Sun,
   Menu,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -21,25 +22,28 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Investment Plans', href: '/plans', icon: Wallet },
-  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
-  { name: 'Deposit', href: '/deposit', icon: DollarSign },
-  { name: 'Withdraw', href: '/withdraw', icon: DollarSign },
-  { name: 'Profile', href: '/profile', icon: User },
-];
-
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { signOut, user } = useAuth();
   const { theme, setTheme } = useTheme();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const isAdmin = user?.email === 'admin@investapp.com';
+
+  const navigation = [
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Investment Plans', href: '/plans', icon: Wallet },
+    { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+    { name: 'Deposit', href: '/deposit', icon: DollarSign },
+    { name: 'Withdraw', href: '/withdraw', icon: DollarSign },
+    { name: 'Profile', href: '/profile', icon: User },
+    ...(isAdmin ? [{ name: 'Admin Panel', href: '/admin', icon: Shield }] : []),
+  ];
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
@@ -49,9 +53,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-300 ease-in-out md:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-300 ease-in-out ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:static md:inset-0`}>
+      } md:translate-x-0`}>
         <div className="flex flex-col h-full">
           {/* Logo and close button */}
           <div className="flex items-center justify-between p-4 border-b border-border">
@@ -116,9 +120,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="md:ml-64">
-        {/* Top bar */}
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col md:ml-64">
+        {/* Mobile top bar */}
         <div className="bg-card border-b border-border p-4 md:hidden">
           <div className="flex items-center justify-between">
             <Button
@@ -135,7 +139,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
 
         {/* Page content */}
-        <main className="p-4 md:p-6">
+        <main className="flex-1 p-4 md:p-6 overflow-auto">
           {children}
         </main>
       </div>

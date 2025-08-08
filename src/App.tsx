@@ -12,6 +12,7 @@ import Tasks from "./pages/Tasks";
 import Deposit from "./pages/Deposit";
 import Withdraw from "./pages/Withdraw";
 import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -55,6 +56,11 @@ const App = () => (
               <Route path="/profile" element={
                 <DashboardLayout>
                   <Profile />
+                </DashboardLayout>
+              } />
+              <Route path="/admin" element={
+                <DashboardLayout>
+                  <Admin />
                 </DashboardLayout>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

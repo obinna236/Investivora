@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
+import { usePaystack } from '@/hooks/usePaystack';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { CreditCard, Wallet, Clock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
@@ -17,6 +17,7 @@ interface DepositForm {
 export default function Deposit() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { initializePayment } = usePaystack();
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, reset, formState: { errors } } = useForm<DepositForm>();
 
@@ -25,27 +26,26 @@ export default function Deposit() {
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('deposits')
-        .insert({
+      // Initialize Paystack payment
+      await initializePayment({
+        email: user.email || '',
+        amount: data.amount,
+        metadata: {
           user_id: user.id,
-          amount: data.amount,
-          status: 'pending'
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Deposit Request Submitted",
-        description: `Your deposit of ₦${data.amount.toLocaleString()} is being processed`
+          type: 'deposit'
+        }
       });
 
-      reset();
+      toast({
+        title: "Redirecting to Payment",
+        description: "You will be redirected to complete your payment"
+      });
+
     } catch (error) {
-      console.error('Error creating deposit:', error);
+      console.error('Error initializing payment:', error);
       toast({
         title: "Error",
-        description: "Failed to submit deposit request",
+        description: "Failed to initialize payment",
         variant: "destructive"
       });
     } finally {
@@ -91,7 +91,7 @@ export default function Deposit() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Processing...' : 'Submit Deposit Request'}
+              {loading ? 'Processing...' : 'Pay with Paystack'}
             </Button>
           </form>
         </CardContent>
