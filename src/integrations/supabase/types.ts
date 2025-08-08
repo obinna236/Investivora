@@ -19,6 +19,7 @@ export type Database = {
           amount: number | null
           created_at: string | null
           id: string
+          reference: string | null
           status: string | null
           user_id: string | null
         }
@@ -26,6 +27,7 @@ export type Database = {
           amount?: number | null
           created_at?: string | null
           id?: string
+          reference?: string | null
           status?: string | null
           user_id?: string | null
         }
@@ -33,6 +35,7 @@ export type Database = {
           amount?: number | null
           created_at?: string | null
           id?: string
+          reference?: string | null
           status?: string | null
           user_id?: string | null
         }
