@@ -53,22 +53,13 @@ export default function Tasks() {
     if (!user) return;
 
     try {
-      // Update task as completed
-      const { error: taskError } = await supabase
-        .from('tasks')
-        .update({ completed: true })
-        .eq('id', taskId)
-        .eq('user_id', user.id);
-
-      if (taskError) throw taskError;
-
-      // Update user balance
-      const { error: balanceError } = await supabase.rpc('increment_user_balance', {
-        user_id: user.id,
-        amount: reward
+      // Use the database function to complete task and update balance
+      const { error } = await supabase.rpc('complete_task_and_update_balance', {
+        task_id: taskId,
+        user_id: user.id
       });
 
-      if (balanceError) throw balanceError;
+      if (error) throw error;
 
       // Update local state
       setTasks(prev => prev.map(task => 

@@ -222,7 +222,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      complete_task_and_update_balance: {
+        Args: { task_id: string; user_id: string }
+        Returns: undefined
+      }
+      increment_user_balance: {
+        Args: { user_id: string; amount: number }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
