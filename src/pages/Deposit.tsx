@@ -152,8 +152,7 @@ export default function Deposit() {
                 key={amount}
                 variant="outline"
                 onClick={() => {
-                  const event = { target: { value: amount.toString() } };
-                  register('amount').onChange(event);
+                  reset({ amount });
                 }}
                 className="h-12"
               >

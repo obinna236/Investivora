@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import InvestmentPlans from "./pages/InvestmentPlans";
 import Tasks from "./pages/Tasks";
@@ -29,39 +30,53 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={
-                <DashboardLayout>
-                  <Dashboard />
-                </DashboardLayout>
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Dashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
               } />
               <Route path="/plans" element={
-                <DashboardLayout>
-                  <InvestmentPlans />
-                </DashboardLayout>
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <InvestmentPlans />
+                  </DashboardLayout>
+                </ProtectedRoute>
               } />
               <Route path="/tasks" element={
-                <DashboardLayout>
-                  <Tasks />
-                </DashboardLayout>
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Tasks />
+                  </DashboardLayout>
+                </ProtectedRoute>
               } />
               <Route path="/deposit" element={
-                <DashboardLayout>
-                  <Deposit />
-                </DashboardLayout>
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Deposit />
+                  </DashboardLayout>
+                </ProtectedRoute>
               } />
               <Route path="/withdraw" element={
-                <DashboardLayout>
-                  <Withdraw />
-                </DashboardLayout>
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Withdraw />
+                  </DashboardLayout>
+                </ProtectedRoute>
               } />
               <Route path="/profile" element={
-                <DashboardLayout>
-                  <Profile />
-                </DashboardLayout>
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Profile />
+                  </DashboardLayout>
+                </ProtectedRoute>
               } />
               <Route path="/admin" element={
-                <DashboardLayout>
-                  <Admin />
-                </DashboardLayout>
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Admin />
+                  </DashboardLayout>
+                </ProtectedRoute>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
