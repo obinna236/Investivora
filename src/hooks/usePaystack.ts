@@ -3,6 +3,8 @@ import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 
+const PAYSTACK_PUBLIC_KEY = 'pk_live_def7dc8da6b023edb7c1c5de995247e9b75917eb';
+
 interface PaystackConfig {
   email: string;
   amount: number; // in kobo (smallest currency unit)
