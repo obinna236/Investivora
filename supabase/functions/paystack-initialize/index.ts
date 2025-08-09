@@ -31,7 +31,7 @@ serve(async (req) => {
         email,
         amount: amount * 100, // Convert to kobo
         currency,
-        callback_url: `${req.headers.get('origin')}/payment/callback`,
+        callback_url: `${req.headers.get('origin')}/payment-success`,
         metadata
       })
     })
