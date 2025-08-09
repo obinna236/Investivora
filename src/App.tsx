@@ -16,6 +16,7 @@ import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/" element={
                 <ProtectedRoute>
                   <DashboardLayout>

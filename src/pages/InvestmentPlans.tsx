@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Star, Diamond, Zap } from 'lucide-react';
+import { useInvestmentPlan } from '@/hooks/useInvestmentPlan';
 
 const plans = [
   {
@@ -73,6 +74,16 @@ const plans = [
 ];
 
 export default function InvestmentPlans() {
+  const { purchasePlan } = useInvestmentPlan();
+
+  const handlePurchase = (plan: typeof plans[0]) => {
+    purchasePlan({
+      id: plan.id,
+      name: plan.name,
+      price: plan.price
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -115,6 +126,7 @@ export default function InvestmentPlans() {
                 <Button 
                   className="w-full" 
                   variant={plan.popular ? 'default' : 'outline'}
+                  onClick={() => handlePurchase(plan)}
                 >
                   Choose {plan.name}
                 </Button>

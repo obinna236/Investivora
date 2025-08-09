@@ -53,9 +53,11 @@ export const usePaystack = () => {
 
       if (error) throw error;
 
-      // Redirect to Paystack checkout
+      // Redirect to Paystack checkout with callback URL
       if (data?.authorization_url) {
-        window.location.href = data.authorization_url;
+        const callbackUrl = `${window.location.origin}/payment-success`;
+        const urlWithCallback = `${data.authorization_url}&callback_url=${encodeURIComponent(callbackUrl)}`;
+        window.location.href = urlWithCallback;
       }
 
       return data;
