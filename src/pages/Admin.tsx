@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +29,8 @@ interface User {
   full_name: string;
   balance: number;
   created_at: string;
+  active_plan_name?: string | null;
+  active_plan_price?: number | null;
 }
 
 interface Transaction {
@@ -36,6 +39,14 @@ interface Transaction {
   type: string;
   amount: number;
   description: string;
+  created_at: string;
+}
+
+interface Withdrawal {
+  id: string;
+  user_id: string;
+  amount: number;
+  status: string;
   created_at: string;
 }
 
@@ -56,26 +67,43 @@ interface TaskForm {
 export default function Admin() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalDeposits: 0,
-    totalWithdrawals: 0,
-    totalTasks: 0
-  });
+const [users, setUsers] = useState<User[]>([]);
+const [transactions, setTransactions] = useState<Transaction[]>([]);
+const [tasks, setTasks] = useState<Task[]>([]);
+const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+const [loading, setLoading] = useState(true);
+const [stats, setStats] = useState({
+  totalUsers: 0,
+  totalDeposits: 0,
+  totalWithdrawals: 0,
+  totalTasks: 0,
+  monthlyDeposits: 0
+});
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<TaskForm>();
 
-  // Check if user is admin (you can implement proper admin role checking)
-  const isAdmin = user?.email === 'admin@investapp.com';
+// Admin role check
+const [isAdmin, setIsAdmin] = useState(false);
+const [adminLoading, setAdminLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isAdmin) return;
-    fetchAdminData();
-  }, [isAdmin]);
+useEffect(() => {
+  if (!user) return;
+  (async () => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    setIsAdmin(!!data);
+    setAdminLoading(false);
+  })();
+}, [user]);
+
+useEffect(() => {
+  if (!isAdmin) return;
+  fetchAdminData();
+}, [isAdmin]);
 
   const fetchAdminData = async () => {
     try {
@@ -98,30 +126,39 @@ export default function Admin() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Fetch deposits
+      // Fetch deposits (all completed)
       const { data: depositsData } = await supabase
         .from('deposits')
-        .select('amount')
+        .select('amount, created_at')
         .eq('status', 'completed');
 
-      // Fetch withdrawals
+      // Fetch withdrawals (all)
       const { data: withdrawalsData } = await supabase
         .from('withdrawals')
-        .select('amount')
-        .eq('status', 'completed');
+        .select('*');
 
       setUsers(usersData || []);
       setTransactions(transactionsData || []);
       setTasks(tasksData || []);
+      setWithdrawals(withdrawalsData || []);
 
       const totalDeposits = depositsData?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+
+      // Monthly deposits progress
+      const now = new Date();
+      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthlyDeposits = (depositsData || [])
+        .filter((d) => new Date(d.created_at) >= firstOfMonth)
+        .reduce((sum, d) => sum + Number(d.amount), 0);
+
       const totalWithdrawals = withdrawalsData?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
       setStats({
         totalUsers: usersData?.length || 0,
         totalDeposits,
         totalWithdrawals,
-        totalTasks: tasksData?.length || 0
+        totalTasks: tasksData?.length || 0,
+        monthlyDeposits
       });
 
     } catch (error) {
@@ -165,6 +202,34 @@ export default function Admin() {
       });
     }
   };
+
+  const deleteTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+      if (error) throw error;
+      toast({ title: 'Task Deleted', description: 'The task has been removed.' });
+      fetchAdminData();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({ title: 'Error', description: 'Failed to delete task', variant: 'destructive' });
+    }
+  };
+
+  if (adminLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card className="w-full max-w-md">
+          <CardContent className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Checking admin access...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (
@@ -244,6 +309,16 @@ export default function Admin() {
             <div className="text-2xl font-bold">{stats.totalTasks}</div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Goal Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-2 text-sm text-muted-foreground">₦{stats.monthlyDeposits.toLocaleString()} / ₦{(1000000).toLocaleString()}</div>
+            <Progress value={Math.min(100, Math.round((stats.monthlyDeposits / 1000000) * 100))} />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Admin Tabs */}
@@ -252,6 +327,7 @@ export default function Admin() {
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -267,6 +343,8 @@ export default function Admin() {
                     <TableHead>Email</TableHead>
                     <TableHead>Full Name</TableHead>
                     <TableHead>Balance</TableHead>
+                    <TableHead>Active Plan</TableHead>
+                    <TableHead>Plan Price</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -277,6 +355,8 @@ export default function Admin() {
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.full_name || 'Not set'}</TableCell>
                       <TableCell>₦{Number(user.balance).toLocaleString()}</TableCell>
+                      <TableCell>{user.active_plan_name || '-'}</TableCell>
+                      <TableCell>{user.active_plan_price ? `₦${Number(user.active_plan_price).toLocaleString()}` : '-'}</TableCell>
                       <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -419,7 +499,7 @@ export default function Admin() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => deleteTask(task.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
