@@ -17,6 +17,7 @@ import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +32,8 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
-              <Route path="/" element={
+              <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <DashboardLayout>
                     <Dashboard />

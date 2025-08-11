@@ -31,7 +31,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const isAdmin = user?.email === 'favourdeveloper8@gmail.com';
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Investment Plans', href: '/plans', icon: Wallet },
     { name: 'Tasks', href: '/tasks', icon: CheckSquare },
     { name: 'Deposit', href: '/deposit', icon: DollarSign },
