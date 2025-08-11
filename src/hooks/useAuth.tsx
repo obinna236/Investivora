@@ -110,19 +110,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
+
+      // Treat missing session as a successful sign-out
+      const isBenign = error && (
+        (typeof error.message === 'string' && error.message.toLowerCase().includes('session')) ||
+        (error as any).status === 403 ||
+        (error as any).code === 'session_not_found'
+      );
+
+      if (error && !isBenign) {
         toast({
           title: "Sign Out Error",
           description: error.message,
           variant: "destructive"
         });
+      } else {
+        toast({ title: 'Signed out' });
       }
     } catch (error: any) {
+      // Fallback toast but still clear local state
       toast({
         title: "Sign Out Error",
         description: "An unexpected error occurred",
         variant: "destructive"
       });
+    } finally {
+      // Ensure local state clears even if API says session not found
+      setSession(null);
+      setUser(null);
     }
   };
 
