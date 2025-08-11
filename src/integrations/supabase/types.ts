@@ -302,6 +302,7 @@ export type Database = {
           amount: number | null
           bank_name: string | null
           created_at: string | null
+          expire_at: string | null
           id: string
           status: string | null
           user_id: string | null
@@ -312,6 +313,7 @@ export type Database = {
           amount?: number | null
           bank_name?: string | null
           created_at?: string | null
+          expire_at?: string | null
           id?: string
           status?: string | null
           user_id?: string | null
@@ -322,6 +324,7 @@ export type Database = {
           amount?: number | null
           bank_name?: string | null
           created_at?: string | null
+          expire_at?: string | null
           id?: string
           status?: string | null
           user_id?: string | null

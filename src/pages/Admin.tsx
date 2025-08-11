@@ -52,6 +52,7 @@ interface Withdrawal {
   bank_name?: string | null;
   account_number?: string | null;
   account_name?: string | null;
+  expire_at?: string | null;
 }
 
 interface TaskTemplate {
@@ -94,6 +95,8 @@ const [stats, setStats] = useState({
   monthlyDeposits: 0
 });
 
+  const [tick, setTick] = useState(0);
+
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<TaskTemplateForm>({
     defaultValues: {
       duration_seconds: 30,
@@ -124,6 +127,12 @@ useEffect(() => {
   if (!isAdmin) return;
   fetchAdminData();
 }, [isAdmin]);
+
+// Re-render periodically to auto-hide expired finalized withdrawals
+useEffect(() => {
+  const id = setInterval(() => setTick((t) => t + 1), 15000);
+  return () => clearInterval(id);
+}, []);
 
   const fetchAdminData = async () => {
     try {
@@ -156,7 +165,8 @@ useEffect(() => {
       // Fetch withdrawals (all)
       const { data: withdrawalsData } = await supabase
         .from('withdrawals')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
 
       setUsers(usersData || []);
       setTransactions(transactionsData || []);
@@ -302,6 +312,16 @@ const updateWithdrawalStatus = async (withdrawalId: string, status: 'approved' |
       </div>
     );
   }
+
+  // Compute visible withdrawals with pending on top and hide expired finalized ones
+  const nowTs = Date.now() + tick; // tick forces periodic re-computation
+  const visibleWithdrawals = withdrawals
+    .filter((w) => w.status === 'pending' || !w.expire_at || new Date(w.expire_at).getTime() > nowTs)
+    .sort((a, b) => {
+      if (a.status === 'pending' && b.status !== 'pending') return -1;
+      if (b.status === 'pending' && a.status !== 'pending') return 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   return (
     <div className="space-y-6">
@@ -620,7 +640,7 @@ const updateWithdrawalStatus = async (withdrawalId: string, status: 'approved' |
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {withdrawals.map((w) => (
+                  {visibleWithdrawals.map((w) => (
                     <TableRow key={w.id}>
                       <TableCell className="font-mono text-sm">{w.user_id}</TableCell>
                       <TableCell>{w.account_name || '-'}</TableCell>
