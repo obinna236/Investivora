@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +22,7 @@ import {
   Edit,
   Trash2
 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 
 interface User {
   id: string;
@@ -90,7 +91,13 @@ const [stats, setStats] = useState({
   monthlyDeposits: 0
 });
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<TaskTemplateForm>();
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<TaskTemplateForm>({
+    defaultValues: {
+      duration_seconds: 30,
+      is_active: true,
+      active_date: new Date().toISOString().slice(0,10)
+    }
+  });
 
 // Admin role check
 const [isAdmin, setIsAdmin] = useState(false);
@@ -469,11 +476,24 @@ const updateWithdrawalStatus = async (withdrawalId: string, status: 'approved' |
     </div>
 
     <div>
-      <Label htmlFor="plan_id">Plan ID</Label>
-      <Input
-        id="plan_id"
-        placeholder="basic | premium | pro | diamond"
-        {...register('plan_id', { required: 'Plan ID is required' })}
+      <Label>Plan</Label>
+      <Controller
+        name="plan_id"
+        control={control}
+        rules={{ required: 'Plan is required' }}
+        render={({ field }) => (
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select plan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="basic">Basic</SelectItem>
+              <SelectItem value="premium">Premium</SelectItem>
+              <SelectItem value="pro">Pro</SelectItem>
+              <SelectItem value="diamond">Diamond</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       />
       {errors.plan_id && (
         <p className="text-sm text-destructive mt-1">{errors.plan_id.message}</p>
