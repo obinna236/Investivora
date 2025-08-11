@@ -6,8 +6,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckSquare, Clock, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-interface Task {
+interface TaskTemplate {
+  id: string;
+  title: string;
+  reward: number;
+  duration_seconds: number;
+  link_url?: string | null;
+  embed_url?: string | null;
+  created_at: string;
+}
+
+interface TaskView {
   id: string;
   title: string;
   reward: number;
@@ -18,22 +29,48 @@ interface Task {
 export default function Tasks() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskView[]>([]);
+  const [templates, setTemplates] = useState<TaskTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activeTemplate, setActiveTemplate] = useState<TaskTemplate | null>(null);
+  const [timer, setTimer] = useState(0);
 
   useEffect(() => {
     const fetchTasks = async () => {
       if (!user) return;
 
       try {
-        const { data, error } = await supabase
-          .from('tasks')
+        const { data: templatesData, error: tError } = await supabase
+          .from('task_templates')
           .select('*')
-          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        setTasks(data || []);
+        if (tError) throw tError;
+
+        setTemplates(templatesData || []);
+
+        const templateIds = (templatesData || []).map((t) => t.id);
+        let statuses: any[] = [];
+        if (templateIds.length > 0) {
+          const { data: statusData, error: sError } = await supabase
+            .from('user_task_status')
+            .select('*')
+            .in('task_template_id', templateIds);
+          if (sError) throw sError;
+          statuses = statusData || [];
+        }
+
+        const statusMap = new Map(statuses.map((s) => [s.task_template_id, s.completed]));
+        const mapped: TaskView[] = (templatesData || []).map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          reward: Number(t.reward || 0),
+          completed: !!statusMap.get(t.id),
+          created_at: t.created_at,
+        }));
+
+        setTasks(mapped);
       } catch (error) {
         console.error('Error fetching tasks:', error);
         toast({
@@ -49,27 +86,54 @@ export default function Tasks() {
     fetchTasks();
   }, [user, toast]);
 
-  const completeTask = async (taskId: string, reward: number) => {
+  const handlePerform = async (templateId: string, reward: number) => {
     if (!user) return;
 
     try {
-      // Use the database function to complete task and update balance
-      const { error } = await supabase.rpc('complete_task_and_update_balance', {
-        task_id: taskId,
-        user_id: user.id
+      const { error } = await supabase.rpc('start_task', {
+        template_id: templateId,
+        _user_id: user.id
+      });
+      if (error) throw error;
+
+      const tpl = templates.find((t) => t.id === templateId);
+      if (tpl) {
+        setActiveTemplate(tpl);
+        setTimer(tpl.duration_seconds || 30);
+        setModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Error starting task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start task",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const completeActiveTask = async () => {
+    if (!user || !activeTemplate) return;
+
+    try {
+      const { error } = await supabase.rpc('complete_task_by_template', {
+        template_id: activeTemplate.id,
+        _user_id: user.id
       });
 
       if (error) throw error;
 
-      // Update local state
-      setTasks(prev => prev.map(task => 
-        task.id === taskId ? { ...task, completed: true } : task
+      setTasks((prev) => prev.map((t) =>
+        t.id === activeTemplate.id ? { ...t, completed: true } : t
       ));
 
       toast({
         title: "Task Completed!",
-        description: `You earned ₦${reward.toLocaleString()}`
+        description: `You earned ₦${Number(activeTemplate.reward).toLocaleString()}`
       });
+
+      setModalOpen(false);
+      setActiveTemplate(null);
     } catch (error) {
       console.error('Error completing task:', error);
       toast({
@@ -164,10 +228,10 @@ export default function Tasks() {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    onClick={() => completeTask(task.id, task.reward)}
+                    onClick={() => handlePerform(task.id, task.reward)}
                     className="w-full md:w-auto"
                   >
-                    Complete Task
+                    Perform Task
                   </Button>
                 </CardContent>
               </Card>
@@ -201,15 +265,45 @@ export default function Tasks() {
         </div>
       )}
 
-      {tasks.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No tasks available</h3>
-            <p className="text-muted-foreground">Check back later for new tasks to complete</p>
-          </CardContent>
-        </Card>
-      )}
+{tasks.length === 0 && (
+  <Card>
+    <CardContent className="text-center py-12">
+      <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+      <h3 className="text-lg font-semibold mb-2">No tasks available</h3>
+      <p className="text-muted-foreground">Check back later for new tasks to complete</p>
+    </CardContent>
+  </Card>
+)}
+
+<Dialog open={modalOpen} onOpenChange={setModalOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Perform Task</DialogTitle>
+    </DialogHeader>
+    <div className="space-y-4">
+      <p className="text-muted-foreground">Spend at least {activeTemplate?.duration_seconds || 30} seconds on the task.</p>
+      {activeTemplate?.embed_url ? (
+        <div className="aspect-video w-full">
+          <iframe
+            src={activeTemplate.embed_url}
+            title={activeTemplate.title}
+            className="w-full h-full rounded"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      ) : activeTemplate?.link_url ? (
+        <Button asChild variant="outline">
+          <a href={activeTemplate.link_url} target="_blank" rel="noopener noreferrer">Open Task Link</a>
+        </Button>
+      ) : null}
+      <div className="text-sm text-muted-foreground">Time remaining: {Math.max(0, timer)}s</div>
+    </div>
+    <DialogFooter>
+      <Button onClick={completeActiveTask} disabled={timer > 0 || !activeTemplate}>Mark as Completed</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
     </div>
   );
 }

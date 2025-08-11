@@ -88,6 +88,45 @@ export type Database = {
           },
         ]
       }
+      task_templates: {
+        Row: {
+          active_date: string
+          created_at: string
+          duration_seconds: number
+          embed_url: string | null
+          id: string
+          is_active: boolean
+          link_url: string | null
+          plan_id: string
+          reward: number
+          title: string
+        }
+        Insert: {
+          active_date?: string
+          created_at?: string
+          duration_seconds?: number
+          embed_url?: string | null
+          id?: string
+          is_active?: boolean
+          link_url?: string | null
+          plan_id: string
+          reward?: number
+          title: string
+        }
+        Update: {
+          active_date?: string
+          created_at?: string
+          duration_seconds?: number
+          embed_url?: string | null
+          id?: string
+          is_active?: boolean
+          link_url?: string | null
+          plan_id?: string
+          reward?: number
+          title?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           completed: boolean | null
@@ -176,6 +215,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_task_status: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          started_at: string | null
+          task_template_id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          started_at?: string | null
+          task_template_id: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          started_at?: string | null
+          task_template_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_task_status_task_template_id_fkey"
+            columns: ["task_template_id"]
+            isOneToOne: false
+            referencedRelation: "task_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           active_plan_id: string | null
@@ -259,6 +336,10 @@ export type Database = {
         Args: { task_id: string; user_id: string }
         Returns: undefined
       }
+      complete_task_by_template: {
+        Args: { template_id: string; _user_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _user_id: string
@@ -268,6 +349,10 @@ export type Database = {
       }
       increment_user_balance: {
         Args: { user_id: string; amount: number }
+        Returns: undefined
+      }
+      start_task: {
+        Args: { template_id: string; _user_id: string }
         Returns: undefined
       }
     }
