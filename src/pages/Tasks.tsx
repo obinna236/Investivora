@@ -7,6 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { CheckSquare, Clock, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Link } from 'react-router-dom';
 
 interface TaskTemplate {
   id: string;
@@ -35,6 +37,8 @@ export default function Tasks() {
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<TaskTemplate | null>(null);
   const [timer, setTimer] = useState(0);
+  const [planInfo, setPlanInfo] = useState<{ id: string | null; name: string | null } | null>(null);
+  const [planLoading, setPlanLoading] = useState(true);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -85,6 +89,27 @@ export default function Tasks() {
 
     fetchTasks();
   }, [user, toast]);
+
+  useEffect(() => {
+    if (!user) return;
+    const loadPlan = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('active_plan_id, active_plan_name')
+          .eq('id', user.id)
+          .single();
+        if (error) throw error;
+        setPlanInfo({ id: data?.active_plan_id ?? null, name: data?.active_plan_name ?? null });
+      } catch (e) {
+        console.error('Error loading plan info:', e);
+        setPlanInfo({ id: null, name: null });
+      } finally {
+        setPlanLoading(false);
+      }
+    };
+    loadPlan();
+  }, [user]);
 
   const handlePerform = async (templateId: string, reward: number) => {
     if (!user) return;
@@ -144,7 +169,7 @@ export default function Tasks() {
     }
   };
 
-  if (loading) {
+  if (loading || planLoading) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
@@ -171,6 +196,20 @@ export default function Tasks() {
         <h1 className="text-3xl font-bold">Tasks</h1>
         <p className="text-muted-foreground">Complete tasks to earn rewards</p>
       </div>
+
+      {planInfo && !planInfo.id && (
+        <Alert>
+          <AlertTitle>Purchase an investment plan to unlock task earning</AlertTitle>
+          <AlertDescription>
+            You currently don’t have an active plan. Choose a plan to start completing tasks and earning rewards.
+          </AlertDescription>
+          <div className="mt-4">
+            <Button asChild>
+              <Link to="/plans">View Investment Plans</Link>
+            </Button>
+          </div>
+        </Alert>
+      )}
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
