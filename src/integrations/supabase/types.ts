@@ -297,21 +297,30 @@ export type Database = {
       }
       withdrawals: {
         Row: {
+          account_name: string | null
+          account_number: string | null
           amount: number | null
+          bank_name: string | null
           created_at: string | null
           id: string
           status: string | null
           user_id: string | null
         }
         Insert: {
+          account_name?: string | null
+          account_number?: string | null
           amount?: number | null
+          bank_name?: string | null
           created_at?: string | null
           id?: string
           status?: string | null
           user_id?: string | null
         }
         Update: {
+          account_name?: string | null
+          account_number?: string | null
           amount?: number | null
+          bank_name?: string | null
           created_at?: string | null
           id?: string
           status?: string | null

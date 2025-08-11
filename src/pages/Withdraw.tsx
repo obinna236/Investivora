@@ -65,7 +65,10 @@ export default function Withdraw() {
         .insert({
           user_id: user.id,
           amount: data.amount,
-          status: 'pending'
+          status: 'pending',
+          bank_name: data.bankName,
+          account_number: data.accountNumber,
+          account_name: data.accountName,
         });
 
       if (error) throw error;
@@ -75,6 +78,7 @@ export default function Withdraw() {
         description: `Your withdrawal of ₦${data.amount.toLocaleString()} is being processed`
       });
 
+      setUserBalance((b) => Math.max(0, Number(b) - Number(data.amount)));
       reset();
     } catch (error) {
       console.error('Error creating withdrawal:', error);

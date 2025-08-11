@@ -49,6 +49,9 @@ interface Withdrawal {
   amount: number;
   status: string;
   created_at: string;
+  bank_name?: string | null;
+  account_number?: string | null;
+  account_name?: string | null;
 }
 
 interface TaskTemplate {
@@ -607,6 +610,9 @@ const updateWithdrawalStatus = async (withdrawalId: string, status: 'approved' |
                 <TableHeader>
                   <TableRow>
                     <TableHead>User ID</TableHead>
+                    <TableHead>Account Name</TableHead>
+                    <TableHead>Account Number</TableHead>
+                    <TableHead>Bank</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
@@ -617,6 +623,9 @@ const updateWithdrawalStatus = async (withdrawalId: string, status: 'approved' |
                   {withdrawals.map((w) => (
                     <TableRow key={w.id}>
                       <TableCell className="font-mono text-sm">{w.user_id}</TableCell>
+                      <TableCell>{w.account_name || '-'}</TableCell>
+                      <TableCell className="font-mono">{w.account_number || '-'}</TableCell>
+                      <TableCell>{w.bank_name || '-'}</TableCell>
                       <TableCell>₦{Number(w.amount).toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge variant={w.status === 'approved' ? 'default' : w.status === 'rejected' ? 'destructive' : 'outline'}>
