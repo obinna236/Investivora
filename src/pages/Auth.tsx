@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,10 +10,11 @@ import { useAuth } from '@/hooks/useAuth';
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // Redirect if already authenticated
   if (user) {
-    return <Navigate to="/" replace />;
+    const adminEmail = 'favourdeveloper8@gmail.com';
+    return <Navigate to={user.email === adminEmail ? "/admin" : "/"} replace />;
   }
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -23,8 +24,11 @@ const Auth = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-
-    await signIn(email, password);
+    const { error } = await signIn(email, password);
+    if (!error) {
+      const adminEmail = 'favourdeveloper8@gmail.com';
+      navigate(email === adminEmail ? '/admin' : '/', { replace: true });
+    }
     setIsLoading(false);
   };
 

@@ -28,7 +28,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const isAdmin = user?.email === 'admin@investapp.com';
+  const isAdmin = user?.email === 'favourdeveloper8@gmail.com';
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
