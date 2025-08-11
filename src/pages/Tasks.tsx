@@ -41,7 +41,7 @@ export default function Tasks() {
       if (!user) return;
 
       try {
-        const { data: templatesData, error: tError } = await supabase
+        const { data: templatesData, error: tError } = await (supabase as any)
           .from('task_templates')
           .select('*')
           .order('created_at', { ascending: false });
@@ -53,7 +53,7 @@ export default function Tasks() {
         const templateIds = (templatesData || []).map((t) => t.id);
         let statuses: any[] = [];
         if (templateIds.length > 0) {
-          const { data: statusData, error: sError } = await supabase
+          const { data: statusData, error: sError } = await (supabase as any)
             .from('user_task_status')
             .select('*')
             .in('task_template_id', templateIds);
@@ -90,7 +90,7 @@ export default function Tasks() {
     if (!user) return;
 
     try {
-      const { error } = await supabase.rpc('start_task', {
+      const { error } = await (supabase as any).rpc('start_task', {
         template_id: templateId,
         _user_id: user.id
       });
@@ -116,7 +116,7 @@ export default function Tasks() {
     if (!user || !activeTemplate) return;
 
     try {
-      const { error } = await supabase.rpc('complete_task_by_template', {
+      const { error } = await (supabase as any).rpc('complete_task_by_template', {
         template_id: activeTemplate.id,
         _user_id: user.id
       });

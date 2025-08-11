@@ -131,7 +131,7 @@ useEffect(() => {
         .limit(50);
 
       // Fetch task templates
-      const { data: tasksData } = await supabase
+      const { data: tasksData } = await (supabase as any)
         .from('task_templates')
         .select('*')
         .order('active_date', { ascending: false })
@@ -197,7 +197,7 @@ const createTask = async (data: TaskTemplateForm) => {
       is_active: data.is_active ?? true,
     };
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('task_templates')
       .insert(payload);
 
@@ -222,7 +222,7 @@ const createTask = async (data: TaskTemplateForm) => {
 
 const deleteTask = async (taskId: string) => {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('task_templates')
       .delete()
       .eq('id', taskId);
@@ -233,20 +233,22 @@ const deleteTask = async (taskId: string) => {
     console.error('Error deleting task template:', error);
     toast({ title: 'Error', description: 'Failed to delete task template', variant: 'destructive' });
   }
-  const updateWithdrawalStatus = async (withdrawalId: string, status: 'approved' | 'rejected') => {
-    try {
-      const { error } = await supabase
-        .from('withdrawals')
-        .update({ status })
-        .eq('id', withdrawalId);
-      if (error) throw error;
-      toast({ title: 'Withdrawal Updated', description: `Marked as ${status}.` });
-      fetchAdminData();
-    } catch (error) {
-      console.error('Error updating withdrawal:', error);
-      toast({ title: 'Error', description: 'Failed to update withdrawal', variant: 'destructive' });
-    }
-  };
+};
+
+const updateWithdrawalStatus = async (withdrawalId: string, status: 'approved' | 'rejected') => {
+  try {
+    const { error } = await supabase
+      .from('withdrawals')
+      .update({ status })
+      .eq('id', withdrawalId);
+    if (error) throw error;
+    toast({ title: 'Withdrawal Updated', description: `Marked as ${status}.` });
+    fetchAdminData();
+  } catch (error) {
+    console.error('Error updating withdrawal:', error);
+    toast({ title: 'Error', description: 'Failed to update withdrawal', variant: 'destructive' });
+  }
+};
 
   if (adminLoading) {
     return (
