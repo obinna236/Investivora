@@ -39,6 +39,7 @@ export default function Tasks() {
   const [timer, setTimer] = useState(0);
   const [planInfo, setPlanInfo] = useState<{ id: string | null; name: string | null } | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
+  const [isCountdownActive, setIsCountdownActive] = useState(false);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -111,6 +112,21 @@ export default function Tasks() {
     loadPlan();
   }, [user]);
 
+  useEffect(() => {
+    if (!modalOpen || !isCountdownActive) return;
+    if (timer <= 0) return;
+    const id = setInterval(() => {
+      setTimer((t) => (t > 0 ? t - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [modalOpen, isCountdownActive, timer]);
+
+  useEffect(() => {
+    if (!modalOpen) {
+      setIsCountdownActive(false);
+    }
+  }, [modalOpen]);
+
   const handlePerform = async (templateId: string, reward: number) => {
     if (!user) return;
 
@@ -125,6 +141,7 @@ export default function Tasks() {
       if (tpl) {
         setActiveTemplate(tpl);
         setTimer(tpl.duration_seconds || 30);
+        setIsCountdownActive(!!tpl.embed_url);
         setModalOpen(true);
       }
     } catch (error) {
@@ -333,9 +350,21 @@ export default function Tasks() {
         </div>
       ) : activeTemplate?.link_url ? (
         <Button asChild variant="outline">
-          <a href={activeTemplate.link_url} target="_blank" rel="noopener noreferrer">Open Task Link</a>
+          <a
+            href={activeTemplate.link_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => {
+              if (!isCountdownActive) setIsCountdownActive(true);
+            }}
+          >
+            Open Task Link
+          </a>
         </Button>
       ) : null}
+      {activeTemplate?.link_url && !isCountdownActive && (
+        <div className="text-xs text-muted-foreground">Open the link to start the countdown.</div>
+      )}
       <div className="text-sm text-muted-foreground">Time remaining: {Math.max(0, timer)}s</div>
     </div>
     <DialogFooter>
