@@ -59,9 +59,26 @@ export const usePaystack = () => {
 
       if (error) throw error;
 
-      // Redirect to Paystack checkout
+      // Redirect to Paystack checkout (break out of iframe if needed)
       if (data?.authorization_url) {
-        window.location.href = data.authorization_url;
+        try {
+          if (window.top && window.top !== window.self) {
+            // In an iframe (like the preview) — navigate the top window
+            window.top.location.href = data.authorization_url;
+          } else {
+            window.location.href = data.authorization_url;
+          }
+        } catch (e) {
+          // Fallback to opening a new tab if cross-origin frame blocks access
+          const win = window.open(data.authorization_url, '_blank', 'noopener,noreferrer');
+          if (!win) {
+            toast({
+              title: 'Pop-up blocked',
+              description: 'Please allow pop-ups to continue to Paystack checkout.',
+              variant: 'destructive',
+            });
+          }
+        }
       }
 
       return data;
