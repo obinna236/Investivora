@@ -59,7 +59,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="flex flex-col h-full">
           {/* Logo and close button */}
           <div className="flex items-center justify-between p-4 border-b border-border">
-            <h1 className="text-xl font-bold text-primary">InvestApp</h1>
+            <h1 className="text-xl font-bold text-primary">TaskVest</h1>
             <Button
               variant="ghost"
               size="icon"
