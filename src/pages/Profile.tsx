@@ -25,12 +25,25 @@ interface UserProfile {
   created_at: string;
 }
 
+interface Referral {
+  id: string;
+  referred_email: string | null;
+  created_at: string | null;
+  first_deposit_bonus_awarded: boolean;
+  first_deposit_amount: number | null;
+  referrer_id: string | null;
+  referred_id: string | null;
+  awarded_at: string | null;
+}
+
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [loadingRefs, setLoadingRefs] = useState(false);
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ProfileForm>();
 
   useEffect(() => {
@@ -50,6 +63,23 @@ export default function Profile() {
           fullName: data.full_name || '',
           email: data.email || ''
         });
+
+        // Fetch referrals for stats and list
+        try {
+          setLoadingRefs(true);
+          const { data: refs, error: refErr } = await supabase
+            .from('referrals')
+            .select('*')
+            .eq('referrer_id', user.id)
+            .order('created_at', { ascending: false });
+          if (refErr) {
+            console.error('Error fetching referrals:', refErr);
+          } else {
+            setReferrals(refs ?? []);
+          }
+        } finally {
+          setLoadingRefs(false);
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
         toast({
@@ -134,6 +164,14 @@ export default function Profile() {
       }
     } catch {}
   };
+
+  const stats = useMemo(() => {
+    const total = referrals.length;
+    const successful = referrals.filter(r => r.first_deposit_bonus_awarded).length;
+    const pending = total - successful;
+    const earnings = referrals.reduce((sum, r) => sum + (r.first_deposit_bonus_awarded && r.first_deposit_amount ? Number(r.first_deposit_amount) * 0.10 : 0), 0);
+    return { total, successful, pending, earnings };
+  }, [referrals]);
 
   if (!profile) {
     return (
@@ -294,6 +332,29 @@ export default function Profile() {
             </p>
           </div>
 
+          <div className="space-y-2 mt-4">
+            <h4 className="font-semibold">Your Referrals</h4>
+            {loadingRefs ? (
+              <p className="text-sm text-muted-foreground">Loading referrals...</p>
+            ) : referrals.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No referrals yet. Share your link to get started.</p>
+            ) : (
+              <div className="space-y-2">
+                {referrals.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between p-3 bg-muted rounded-md">
+                    <div>
+                      <div className="font-medium">{r.referred_email || 'Unknown'}</div>
+                      <div className="text-xs text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleString() : ''}</div>
+                    </div>
+                    <Badge variant={r.first_deposit_bonus_awarded ? 'default' : 'secondary'}>
+                      {r.first_deposit_bonus_awarded ? 'Successful' : 'Pending'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <Separator />
 
           <div className="space-y-2">
@@ -314,14 +375,18 @@ export default function Profile() {
           <CardTitle>Account Statistics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="text-center p-4 bg-muted rounded-lg">
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-sm text-muted-foreground">Total Referrals</div>
+            </div>
+            <div className="text-center p-4 bg-muted rounded-lg">
+              <div className="text-2xl font-bold">{stats.successful}</div>
               <div className="text-sm text-muted-foreground">Successful Referrals</div>
             </div>
             <div className="text-center p-4 bg-muted rounded-lg">
-              <div className="text-2xl font-bold">₦0</div>
-              <div className="text-sm text-muted-foreground">Total Earnings</div>
+              <div className="text-2xl font-bold">₦{stats.earnings.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+              <div className="text-sm text-muted-foreground">Total Referral Earnings</div>
             </div>
           </div>
         </CardContent>
