@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,17 @@ const Auth = () => {
   const { user, signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Capture referral code if user lands directly on /auth?ref=CODE
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref') || params.get('referral');
+      if (ref && ref.trim()) {
+        localStorage.setItem('referral_code', ref.trim().toUpperCase());
+      }
+    } catch {}
+  }, []);
 
   if (user) {
     const adminEmail = 'favourdeveloper8@gmail.com';

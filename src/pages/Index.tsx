@@ -44,6 +44,15 @@ const Index = () => {
       document.head.appendChild(ldEl);
     }
     ldEl.textContent = JSON.stringify(ld);
+
+    // Capture referral code from URL and persist
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref') || params.get('referral');
+      if (ref && ref.trim()) {
+        localStorage.setItem('referral_code', ref.trim().toUpperCase());
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {

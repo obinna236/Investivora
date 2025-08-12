@@ -50,7 +50,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName || ''
+            full_name: fullName || '',
+            referred_by: (localStorage.getItem('referral_code') || '').toUpperCase()
           }
         }
       });

@@ -51,21 +51,30 @@ export type Database = {
       }
       referrals: {
         Row: {
+          awarded_at: string | null
           created_at: string | null
+          first_deposit_amount: number | null
+          first_deposit_bonus_awarded: boolean
           id: string
           referred_email: string | null
           referred_id: string | null
           referrer_id: string | null
         }
         Insert: {
+          awarded_at?: string | null
           created_at?: string | null
+          first_deposit_amount?: number | null
+          first_deposit_bonus_awarded?: boolean
           id?: string
           referred_email?: string | null
           referred_id?: string | null
           referrer_id?: string | null
         }
         Update: {
+          awarded_at?: string | null
           created_at?: string | null
+          first_deposit_amount?: number | null
+          first_deposit_bonus_awarded?: boolean
           id?: string
           referred_email?: string | null
           referred_id?: string | null
