@@ -382,7 +382,7 @@ export default function Profile() {
             </div>
             <div className="text-center p-4 bg-muted rounded-lg">
               <div className="text-2xl font-bold">{stats.successful}</div>
-              <div className="text-sm text-muted-foreground">Successful Referrals</div>
+              <div className="text-sm text-muted-foreground">Successful Referrals With Deposit</div>
             </div>
             <div className="text-center p-4 bg-muted rounded-lg">
               <div className="text-2xl font-bold">₦{stats.earnings.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
