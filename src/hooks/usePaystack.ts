@@ -44,10 +44,16 @@ export const usePaystack = () => {
           email: config.email,
           amount: config.amount,
           currency: config.currency || 'NGN',
+          callback_url: (typeof window !== 'undefined' && window.location?.origin)
+            ? `${window.location.origin}/payment-success`
+            : config.callback_url,
           metadata: {
             user_id: user.id,
-            ...config.metadata
-          }
+            cancel_action: (typeof window !== 'undefined' && window.location?.origin)
+              ? `${window.location.origin}/dashboard`
+              : undefined,
+            ...config.metadata,
+          },
         }
       });
 

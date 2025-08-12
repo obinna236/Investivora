@@ -16,27 +16,24 @@ export default function PaymentSuccess() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const reference = searchParams.get('reference');
-    
-    if (!reference) {
-      setVerifying(false);
+    const ref = searchParams.get('reference') || searchParams.get('trxref');
+
+    // If no reference, assume cancelled/abandoned and go back to dashboard
+    if (!ref) {
+      navigate('/dashboard', { replace: true });
       return;
     }
 
     const handleVerification = async () => {
       try {
-        await verifyPayment(reference);
+        await verifyPayment(ref);
         setSuccess(true);
         toast({
           title: "Payment Successful",
           description: "Your deposit has been processed successfully!",
         });
-        
-        // Redirect to dashboard after 2 seconds
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 2000);
-        
+        // Immediately send user to dashboard after verification
+        navigate('/dashboard', { replace: true });
       } catch (error) {
         setSuccess(false);
         toast({

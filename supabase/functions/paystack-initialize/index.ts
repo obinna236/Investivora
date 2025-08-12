@@ -12,12 +12,20 @@ serve(async (req) => {
   }
 
   try {
-    const { email, amount, currency = 'NGN', metadata } = await req.json()
+    const { email, amount, currency = 'NGN', metadata, callback_url } = await req.json()
 
     // Get Paystack secret key from environment
     const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')
     if (!paystackSecretKey) {
       throw new Error('Paystack secret key not configured')
+    }
+
+    // Prepare callback and metadata
+    const origin = req.headers.get('origin') || ''
+    const effectiveCallbackUrl = callback_url || (origin ? `${origin}/payment-success` : undefined)
+    const finalMetadata = {
+      ...(metadata || {}),
+      cancel_action: (metadata?.cancel_action) || (origin ? `${origin}/dashboard` : undefined),
     }
 
     // Initialize payment with Paystack
@@ -31,9 +39,9 @@ serve(async (req) => {
         email,
         amount: amount * 100, // Convert to kobo
         currency,
-        callback_url: `${req.headers.get('origin')}/payment-success`,
-        metadata
-      })
+        callback_url: effectiveCallbackUrl,
+        metadata: finalMetadata,
+      }),
     })
 
     const data = await response.json()
