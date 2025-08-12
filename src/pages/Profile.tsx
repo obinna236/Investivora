@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,6 +105,34 @@ export default function Profile() {
         description: "Referral code copied to clipboard"
       });
     }
+  };
+
+  const referralLink = useMemo(() => (
+    profile ? `${window.location.origin}/?ref=${profile.referral_code}` : ''
+  ), [profile]);
+
+  const copyReferralLink = async () => {
+    if (!referralLink) return;
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      toast({ title: 'Copied!', description: 'Referral link copied to clipboard' });
+    } catch {}
+  };
+
+  const shareReferralLink = async () => {
+    if (!referralLink) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Join Taskvest',
+          text: 'Sign up and earn bonuses with my referral link:',
+          url: referralLink
+        });
+      } else {
+        await copyReferralLink();
+        toast({ title: 'Link copied', description: 'Share it with your friends!' });
+      }
+    } catch {}
   };
 
   if (!profile) {
@@ -252,6 +280,18 @@ export default function Profile() {
                 Copy
               </Button>
             </div>
+          </div>
+
+          <div>
+            <Label>Your Referral Link</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <Input readOnly value={referralLink} />
+              <Button variant="outline" onClick={copyReferralLink}>Copy Link</Button>
+              <Button onClick={shareReferralLink}>Share</Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Friends who sign up using this link will automatically apply your code.
+            </p>
           </div>
 
           <Separator />
