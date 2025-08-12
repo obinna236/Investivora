@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string, referralCode?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
@@ -40,9 +40,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, referralCode?: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
+      const referredBy = (referralCode?.trim()?.toUpperCase()) || (localStorage.getItem('referral_code') || '').toUpperCase();
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName || '',
-            referred_by: (localStorage.getItem('referral_code') || '').toUpperCase()
+            referred_by: referredBy
           }
         }
       });

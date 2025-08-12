@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [detectedRef, setDetectedRef] = useState<string>('');
   const navigate = useNavigate();
 
   // Capture referral code if user lands directly on /auth?ref=CODE
@@ -20,6 +21,8 @@ const Auth = () => {
       if (ref && ref.trim()) {
         localStorage.setItem('referral_code', ref.trim().toUpperCase());
       }
+      const existing = (localStorage.getItem('referral_code') || '').toUpperCase();
+      if (existing) setDetectedRef(existing);
     } catch {}
   }, []);
 
@@ -43,6 +46,23 @@ const Auth = () => {
     setIsLoading(false);
   };
 
+  const handlePasteReferralLink = () => {
+    const url = window.prompt('Paste your referral link');
+    if (!url) return;
+    try {
+      const u = new URL(url);
+      const code = (u.searchParams.get('ref') || u.searchParams.get('referral') || '').toUpperCase();
+      if (code) {
+        localStorage.setItem('referral_code', code);
+        setDetectedRef(code);
+      } else {
+        alert('No referral code found in the link.');
+      }
+    } catch {
+      alert('Invalid link.');
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -51,8 +71,9 @@ const Auth = () => {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const fullName = formData.get('fullName') as string;
+    const referralCode = (formData.get('referralCode') as string) || detectedRef || '';
 
-    await signUp(email, password, fullName);
+    await signUp(email, password, fullName, referralCode);
     setIsLoading(false);
   };
 
@@ -125,6 +146,23 @@ const Auth = () => {
                     placeholder="your@email.com"
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-refcode">Referral Code (optional)</Label>
+                  <Input
+                    id="signup-refcode"
+                    name="referralCode"
+                    type="text"
+                    placeholder="Enter referral code"
+                    defaultValue={detectedRef}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Have a referral link?
+                    <button type="button" className="underline ml-1" onClick={handlePasteReferralLink}>Paste link</button>
+                    {detectedRef ? (
+                      <span className="ml-2">Detected: {detectedRef} <button type="button" className="underline ml-1" onClick={() => { localStorage.removeItem('referral_code'); setDetectedRef(''); }}>clear</button></span>
+                    ) : null}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
