@@ -68,7 +68,7 @@ const Index = () => {
         <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            <span className="font-bold">InvestApp</span>
+            <span className="font-bold">Taskvest</span>
           </div>
           <div className="space-x-3">
             <Button asChild variant="ghost"><Link to="/auth">Login</Link></Button>
@@ -168,7 +168,7 @@ const Index = () => {
 
       <footer className="border-t border-border">
         <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-muted-foreground">
-          © {new Date().getFullYear()} InvestApp. All rights reserved.
+          © {new Date().getFullYear()} TaskVest. All rights reserved.
         </div>
       </footer>
     </div>
