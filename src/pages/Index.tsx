@@ -32,7 +32,7 @@ const Index = () => {
     const ld = {
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'InvestApp',
+      name: 'Investivora',
       url: window.location.origin,
       description: desc
     };
@@ -77,7 +77,7 @@ const Index = () => {
         <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            <span className="font-bold">Taskvest</span>
+            <span className="font-bold">Investivora</span>
           </div>
           <div className="space-x-3">
             <Button asChild variant="ghost"><Link to="/auth">Login</Link></Button>
