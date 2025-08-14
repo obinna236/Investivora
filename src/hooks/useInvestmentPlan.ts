@@ -80,11 +80,11 @@ export const useInvestmentPlan = () => {
         return;
       }
 
-      // Update user balance and active plan atomically-ish (single update)
+      // Update user balance (clear to 0) and active plan atomically-ish (single update)
       const { error: updateError } = await supabase
         .from('users')
         .update({
-          balance: currentBalance - amountToCharge,
+          balance: 0, // Clear balance to 0 when purchasing plan
           active_plan_id: plan.id,
           active_plan_name: plan.name,
           active_plan_price: plan.price,
@@ -102,17 +102,17 @@ export const useInvestmentPlan = () => {
         return;
       }
 
-      // Create transaction record for the charged amount
-      if (amountToCharge > 0) {
+      // Create transaction record for the full balance used
+      if (currentBalance > 0) {
         await supabase
           .from('transactions')
           .insert({
             user_id: user.id,
             type: 'debit',
-            amount: amountToCharge,
+            amount: currentBalance,
             description: currentPlanId
-              ? `Upgrade to ${plan.name} plan`
-              : `Investment plan purchase - ${plan.name}`
+              ? `Upgrade to ${plan.name} plan - balance cleared`
+              : `Investment plan purchase - ${plan.name} - balance cleared`
           });
       }
 
