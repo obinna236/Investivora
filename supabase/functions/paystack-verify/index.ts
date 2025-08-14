@@ -40,12 +40,11 @@ serve(async (req) => {
       
       const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-      // Update deposit status
+      // Update deposit status to 'success' to trigger referral bonus
       const { error: depositError } = await supabase
         .from('deposits')
         .update({ 
-          status: 'completed',
-          created_at: new Date().toISOString()
+          status: 'success'
         })
         .eq('reference', reference)
 
