@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, Star, Diamond, Zap } from 'lucide-react';
+import { Check, Crown, Star, Diamond, Zap, Gem } from 'lucide-react';
 import { useInvestmentPlan } from '@/hooks/useInvestmentPlan';
 
 const plans = [
@@ -70,6 +70,25 @@ const plans = [
       'Personal account manager'
     ],
     popular: false
+  },
+  {
+    id: 'royal',
+    name: 'Royal',
+    price: 100000,
+    icon: Gem,
+    color: 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600',
+    features: [
+      'Minimum investment: ₦100,000',
+      'Maximum withdrawal: ₦300,000',
+      'Minimum withdrawal: ₦100',
+      '20% daily returns',
+      'Elite support',
+      'Premium exclusive tasks',
+      'Ultimate referral bonuses',
+      'Dedicated account manager',
+      'Priority processing'
+    ],
+    popular: false
   }
 ];
 
@@ -91,7 +110,7 @@ export default function InvestmentPlans() {
         <p className="text-muted-foreground mt-2">Choose the plan that fits your investment goals</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         {plans.map((plan) => {
           const Icon = plan.icon;
           return (
