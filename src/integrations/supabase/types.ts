@@ -275,8 +275,6 @@ export type Database = {
           id: string
           referral_code: string | null
           referred_by: string | null
-          total_withdrawn: number | null
-          withdrawal_limit: number | null
         }
         Insert: {
           active_plan_id?: string | null
@@ -290,8 +288,6 @@ export type Database = {
           id?: string
           referral_code?: string | null
           referred_by?: string | null
-          total_withdrawn?: number | null
-          withdrawal_limit?: number | null
         }
         Update: {
           active_plan_id?: string | null
@@ -305,8 +301,6 @@ export type Database = {
           id?: string
           referral_code?: string | null
           referred_by?: string | null
-          total_withdrawn?: number | null
-          withdrawal_limit?: number | null
         }
         Relationships: []
       }

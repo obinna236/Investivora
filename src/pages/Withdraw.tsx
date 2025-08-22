@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Wallet, AlertCircle, Clock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { UpgradeDialog } from '@/components/UpgradeDialog';
 
 interface WithdrawForm {
   amount: number;
@@ -23,10 +22,6 @@ export default function Withdraw() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
-  const [totalWithdrawn, setTotalWithdrawn] = useState(0);
-  const [withdrawalLimit, setWithdrawalLimit] = useState(0);
-  const [currentPlan, setCurrentPlan] = useState('');
-  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<WithdrawForm>();
 
   const withdrawAmount = watch('amount');
@@ -38,16 +33,13 @@ export default function Withdraw() {
       try {
         const { data } = await supabase
           .from('users')
-          .select('balance, total_withdrawn, withdrawal_limit, active_plan_id')
+          .select('balance')
           .eq('id', user.id)
           .single();
 
         setUserBalance(Number(data?.balance) || 0);
-        setTotalWithdrawn(Number(data?.total_withdrawn) || 0);
-        setWithdrawalLimit(Number(data?.withdrawal_limit) || 0);
-        setCurrentPlan(data?.active_plan_id || '');
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Error fetching balance:', error);
       }
     };
 
@@ -66,13 +58,6 @@ export default function Withdraw() {
       return;
     }
 
-    // Check if withdrawal would exceed limit
-    const newTotalWithdrawn = totalWithdrawn + data.amount;
-    if (newTotalWithdrawn > withdrawalLimit) {
-      setShowUpgradeDialog(true);
-      return;
-    }
-
     setLoading(true);
     try {
       const { error } = await supabase
@@ -88,21 +73,12 @@ export default function Withdraw() {
 
       if (error) throw error;
 
-      // Update total withdrawn amount
-      await supabase
-        .from('users')
-        .update({
-          total_withdrawn: newTotalWithdrawn
-        })
-        .eq('id', user.id);
-
       toast({
         title: "Withdrawal Request Submitted",
         description: `Your withdrawal of ₦${data.amount.toLocaleString()} is being processed`
       });
 
       setUserBalance((b) => Math.max(0, Number(b) - Number(data.amount)));
-      setTotalWithdrawn(newTotalWithdrawn);
       reset();
     } catch (error) {
       console.error('Error creating withdrawal:', error);
@@ -285,12 +261,6 @@ export default function Withdraw() {
           <p>• Withdrawal fees may apply for amounts below ₦1,000</p>
         </CardContent>
       </Card>
-
-      <UpgradeDialog 
-        open={showUpgradeDialog}
-        onOpenChange={setShowUpgradeDialog}
-        currentPlan={currentPlan}
-      />
     </div>
   );
 }

@@ -80,26 +80,15 @@ export const useInvestmentPlan = () => {
         return;
       }
 
-      // Set withdrawal limit based on plan
-      const withdrawalLimits = {
-        'basic': 1500,
-        'premium': 3000,
-        'pro': 7000,
-        'diamond': 40000,
-        'royal': 80000
-      };
-
-      // Update user balance (clear to 0) and active plan atomically-ish (single update)
+      // Update user balance and active plan atomically-ish (single update)
       const { error: updateError } = await supabase
         .from('users')
         .update({
-          balance: 0, // Clear balance to 0 when purchasing plan
+          balance: currentBalance - amountToCharge,
           active_plan_id: plan.id,
           active_plan_name: plan.name,
           active_plan_price: plan.price,
-          active_plan_purchased_at: new Date().toISOString(),
-          withdrawal_limit: withdrawalLimits[plan.id as keyof typeof withdrawalLimits] || 0,
-          total_withdrawn: 0 // Reset withdrawn amount when purchasing new plan
+          active_plan_purchased_at: new Date().toISOString()
         })
         .eq('id', user.id);
 
@@ -113,17 +102,17 @@ export const useInvestmentPlan = () => {
         return;
       }
 
-      // Create transaction record for the full balance used
-      if (currentBalance > 0) {
+      // Create transaction record for the charged amount
+      if (amountToCharge > 0) {
         await supabase
           .from('transactions')
           .insert({
             user_id: user.id,
             type: 'debit',
-            amount: currentBalance,
+            amount: amountToCharge,
             description: currentPlanId
-              ? `Upgrade to ${plan.name} plan - balance cleared`
-              : `Investment plan purchase - ${plan.name} - balance cleared`
+              ? `Upgrade to ${plan.name} plan`
+              : `Investment plan purchase - ${plan.name}`
           });
       }
 
