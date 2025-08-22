@@ -40,7 +40,7 @@ const Auth = () => {
     const password = formData.get('password') as string;
     const { error } = await signIn(email, password);
     if (!error) {
-      const adminEmail = 'favourdeveloper8@gmail.com';
+      const adminEmail = 'favdev8@gmail.com';
       navigate(email === adminEmail ? '/admin' : '/', { replace: true });
     }
     setIsLoading(false);
