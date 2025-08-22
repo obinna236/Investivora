@@ -27,7 +27,7 @@ const Auth = () => {
   }, []);
 
   if (user) {
-    const adminEmail = 'favourdeveloper8@gmail.com';
+    const adminEmail = 'favdev8@gmail.com';
     return <Navigate to={user.email === adminEmail ? "/admin" : "/"} replace />;
   }
 
